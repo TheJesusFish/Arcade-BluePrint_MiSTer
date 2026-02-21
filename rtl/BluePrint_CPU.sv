@@ -99,20 +99,22 @@ assign ce_pix = cen_5m;
 
 // H counter 0-319, V counter 0-263
 // From MAME: set_raw(5MHz, 320, 0, 256, 264, 16, 240)
-reg [8:0] h_cnt = 9'd0;
+reg [8:0] base_h_cnt = 9'd0;
 reg [8:0] v_cnt = 9'd0;
 always_ff @(posedge clk_49m) begin
 	if (cen_5m) begin
-		if (h_cnt == 9'd319) begin
-			h_cnt <= 9'd0;
+		if (base_h_cnt == 9'd319) begin
+			base_h_cnt <= 9'd0;
 			v_cnt <= (v_cnt == 9'd263) ? 9'd0 : v_cnt + 9'd1;
 		end else
-			h_cnt <= h_cnt + 9'd1;
+			base_h_cnt <= base_h_cnt + 9'd1;
 	end
 end
 
+wire [8:0] h_cnt = (base_h_cnt <= 9'd248) ? base_h_cnt : 9'd248;
+
 // Blanking
-wire hblk = (h_cnt >= 9'd256);
+wire hblk = (base_h_cnt >= 9'd256);
 wire vblk = (v_cnt < 9'd16) | (v_cnt >= 9'd240);
 assign video_hblank = hblk;
 assign video_vblank = vblk;
@@ -122,7 +124,7 @@ wire [8:0] hs_start = 9'd280 + {5'd0, h_center};  // Was 9'd280 + {5'd0, h_cente
 wire [8:0] hs_end   = hs_start + 9'd32;
 wire [8:0] vs_start = 9'd248 + {5'd0, v_center};
 wire [8:0] vs_end   = vs_start + 9'd4;
-assign video_hsync = (h_cnt >= hs_start && h_cnt < hs_end);
+assign video_hsync = (base_h_cnt >= hs_start && base_h_cnt < hs_end);
 assign video_vsync = (v_cnt >= vs_start && v_cnt < vs_end);
 assign video_csync = ~(video_hsync ^ video_vsync);
 
@@ -340,8 +342,9 @@ reg [6:0] pipe_color;                // Pre-fetched color byte
 reg       pipe_priority;             // Pre-fetched priority bit
 reg [2:0] pipe_fine_y;              // Fine Y for ROM address
 
-wire [8:0] adjusted_h_cnt = (h_cnt <= 9'd248) ? h_cnt : 9'd248;  // Test Adjusting This...
-wire [4:0] screen_col  = adjusted_h_cnt[7:3];  // Changed From - h_cnt[7:3];
+//wire [8:0] adjusted_h_cnt = (h_cnt <= 9'd248) ? h_cnt : 9'd248;  // Test Adjusting This...
+//wire [4:0] screen_col  = adjusted_h_cnt[7:3];  // Changed From - h_cnt[7:3];
+wire [4:0] screen_col  = h_cnt[7:3];
 wire [2:0] fine_x      = h_cnt[2:0];
 wire [7:0] screen_y    = v_cnt[7:0];
 wire visible_line = (v_cnt >= 9'd16) && (v_cnt < 9'd240);
@@ -503,7 +506,7 @@ always_ff @(posedge clk_49m) begin
 		case (spr_state)
 
 			SPR_IDLE: begin
-				if (cen_5m && h_cnt == 9'd256) begin
+				if (cen_5m && base_h_cnt == 9'd256) begin
 					next_scanline  <= v_cnt[7:0] + 8'd1;
 					spr_clear_addr <= 8'd0;
 					spr_state      <= SPR_CLEAR;
