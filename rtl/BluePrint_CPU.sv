@@ -599,7 +599,7 @@ always_ff @(posedge clk_49m) begin
 					// flipX: bit0 first (pixel 0 = LSB); normal: bit7 first (pixel 0 = MSB)
 					bit_pos   = spr_byte2[6] ? spr_pix_cnt : (3'd7 - spr_pix_cnt);
 					pixel_val = {spr_rom_g_lat[bit_pos], spr_rom_b_lat[bit_pos], spr_rom_r_lat[bit_pos]};
-					x_pos     = spr_byte3 + {5'd0, spr_pix_cnt} + 8'd2;
+					x_pos     = spr_byte3 + {5'd0, spr_pix_cnt} - 8'd4;
 					if (pixel_val != 3'd0) begin
 						if (~linebuf_sel)
 							linebuf1[x_pos] <= pixel_val;
