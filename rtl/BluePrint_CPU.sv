@@ -344,8 +344,6 @@ reg [6:0] pipe_color;                // Pre-fetched color byte
 reg       pipe_priority;             // Pre-fetched priority bit
 reg [2:0] pipe_fine_y;              // Fine Y for ROM address
 
-//wire [8:0] adjusted_h_cnt = (h_cnt <= 9'd248) ? h_cnt : 9'd248;  // Test Adjusting This...
-//wire [4:0] screen_col  = adjusted_h_cnt[7:3];  // Changed From - h_cnt[7:3];
 wire [4:0] screen_col  = h_cnt[7:3];
 wire [2:0] fine_x      = h_cnt[2:0];
 wire [7:0] screen_y    = v_cnt[7:0];
@@ -605,7 +603,7 @@ always_ff @(posedge clk_49m) begin
 					// flipX: bit0 first (pixel 0 = LSB); normal: bit7 first (pixel 0 = MSB)
 					bit_pos   = spr_byte2[6] ? spr_pix_cnt : (3'd7 - spr_pix_cnt);
 					pixel_val = {spr_rom_g_lat[bit_pos], spr_rom_b_lat[bit_pos], spr_rom_r_lat[bit_pos]};
-					x_pos     = spr_byte3 + {5'd0, spr_pix_cnt} + 8'd2;
+					x_pos     = spr_byte3 + {5'd0, spr_pix_cnt} + 8'd0;  // + 8'd2
 					if (pixel_val != 3'd0) begin
 						if (~linebuf_sel)
 							linebuf1[x_pos] <= pixel_val;
@@ -636,7 +634,8 @@ end
 
 //--- Sprite pixel readout ---
 
-wire [2:0] sprite_pixel     = linebuf_sel ? linebuf1[h_cnt[7:0]] : linebuf0[h_cnt[7:0]];
+//wire [2:0] sprite_pixel     = linebuf_sel ? linebuf1[h_cnt[7:0]] : linebuf0[h_cnt[7:0]];
+wire [2:0] sprite_pixel       = linebuf_sel ? linebuf1[h_cnt[7:0] - 8'd3] : linebuf0[h_cnt[7:0] - 8'd3];
 wire       sprite_transparent = (sprite_pixel == 3'b000);
 
 // Sprite pixel bits: bit0=R, bit1=B, bit2=G (full brightness only)
