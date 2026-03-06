@@ -27,7 +27,7 @@ module tp_lpf_light(
 	input signed [15:0] in,
 	output signed [15:0] out);
 	
-	reg [9:0] div = 220; //Sample at 49.152/220 = 223418Hz
+	reg [9:0] div = 179; //Sample at 40MHz/179 = 223464Hz
 	
 	//Coefficients computed with Octave/Matlab/Online filter calculators.
 	//or with scipy.signal.bessel or similar tools
